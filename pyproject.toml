@@ -1,0 +1,3 @@
+[tools.py2app.bundle.main]
+
+name = "lion's autoclicker"

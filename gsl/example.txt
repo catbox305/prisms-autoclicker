@@ -1,0 +1,66 @@
+//                 BASICS
+// ──────────────────────────────────────────
+
+// Call a function:
+function | arg1 & arg2
+
+// Define a variable:
+@variable :: value
+
+// Use a variable:
+function | [variable] & [other_variable]
+
+//              BUILTIN METHODS
+// ──────────────────────────────────────────
+
+// Print to the console:
+echo | "Hello, World!"
+
+
+
+
+//           VARIABLES AND MORE
+// ──────────────────────────────────────────
+
+
+// Define a variable normally:
+@mostPurchased :: "chocolate"
+
+// Define a list/give a variable multiple values:
+@inStock :: "sauce" & "chips"
+
+
+// Define a dictionary:
+@productStock {sauce & chips & chocolate} :: {3 & 2 & 0}
+
+
+// HINT: You can define a variable meant specifically for the application parsing the script:
+// HINT: A dictionary containing these variables and their values is returned by the parser upon finish.
+
+@AUTHOR :: "exampleuser"
+
+// HINT: If it is not already obvious, put the name in uppercase.
+
+
+//                FUNCTIONS
+// ──────────────────────────────────────────
+
+
+// Define a function:
+
+*hello | greeting & name :
+- echo | [t.greeting], [t.name]!
+- echo | Goodbye, [t.name]!
+
+// HINT: Access function arguments as though they were part of a dictionary 't'
+
+// Call a function:
+hello | "Howdy" & "Billy"
+// This would return:
+// Howdy, Billy!
+// Goodbye, Billy!
+
+//        SPECIAL CASES / FORMATTING
+// ──────────────────────────────────────────
+
+// = - - Expansion - - =
