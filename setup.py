@@ -1,7 +1,7 @@
 from setuptools import setup
 
-NAME = "lion's autoclicker"
-VERSION = "3.1"
+NAME = "prism's utilities"
+VERSION = "3.2"
 
 plist = {
     "CFBundleIconFile": NAME,
@@ -13,7 +13,7 @@ plist = {
 
 setup(
    
-    app=["lion's autoclicker.py"],
+    app=["prism's utilities.py"],
     setup_requires=["pynput",],
     options={
         "py2app": {

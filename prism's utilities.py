@@ -9,6 +9,7 @@ import time
 import pickle
 m = mouse.Controller()
 k = keyboard.Controller()
+tasky = None
 class Recorder:
     def __init__(self):
         self.events = []
@@ -23,69 +24,78 @@ class Recorder:
             on_press=self.on_press,
             on_release=self.on_release
         )
+
     def on_move(self,x, y):
-        self.events.append(
-                {
-                    "time":round(time.time()-self.start,2),
-                    "event":"move",
-                    "info":[x,y]
-                }
-            )
+        if self.recording:
+            self.events.append(
+                    {
+                        "time":round(time.time()-self.start,2),
+                        "event":"move",
+                        "info":[x,y]
+                    }
+                )
 
     def on_click(self,x, y, button, pressed):
-        self.events.append(
-                {
-                    "time":round(time.time()-self.start,2),
-                    "event":"mpressed" if pressed else "mreleased",
-                    "info":button
-                }
-            )
+        if self.recording:
+            self.events.append(
+                    {
+                        "time":round(time.time()-self.start,2),
+                        "event":"mpressed" if pressed else "mreleased",
+                        "info":button
+                    }
+                )
 
     def on_scroll(self,x, y, dx, dy):
-        self.events.append(
-                {
-                    "time":round(time.time()-self.start,2),
-                    "event":"scroll",
-                    "info":[dx,dy]
-                }
-            )
+        if self.recording:
+            self.events.append(
+                    {
+                        "time":round(time.time()-self.start,2),
+                        "event":"scroll",
+                        "info":[dx,dy]
+                    }
+                )
     def on_press(self,key):
-        self.events.append(
-                {
-                    "time":round(time.time()-self.start,2),
-                    "event":"kpressed",
-                    "info":key
-                }
-            )
+        if self.recording:
+            self.events.append(
+                    {
+                        "time":round(time.time()-self.start,2),
+                        "event":"kpressed",
+                        "info":key
+                    }
+                )
 
     def on_release(self,key):
-
-        self.events.append(
-                {
-                    "time":round(time.time()-self.start,2),
-                    "event":"kreleased",
-                    "info":key
-                }
-            )
-        if key == keyboard.Key.esc:
-            self.Stop()
+        if self.recording:
+            self.events.append(
+                    {
+                        "time":round(time.time()-self.start,2),
+                        "event":"kreleased",
+                        "info":key
+                    }
+                )
     def Start(self):
         self.start = time.time()
         self.recording = True
-        self.mlistener.start()
-        time.sleep(0.1)
-        self.klistener.start()
     def Stop(self):
-        self.mlistener.stop()
-        self.klistener.stop()
         self.recording = False
+        tasky.stop_
     def Save(self):
         with filedialog.asksaveasfile(mode="wb",defaultextension="txt") as f:
             pickle.dump(self.events, f, pickle.HIGHEST_PROTOCOL)
+    def Yield(self):
+        return self.events
+    
 class Player:
-    def __init__(self):
+    def __init__(self,events=[]):
+        if events == []:
+            self.load_from_file()
+        else:
+            self.events = events
+    def load_from_file(self):
         with filedialog.askopenfile(mode="rb") as f:
             self.events = pickle.load(f)
+    def load(self,events):
+        self.events=events
     def Play(self):
         start = time.time()
         for i in self.events:
@@ -105,6 +115,11 @@ class Player:
                 k.press(i["info"])
             elif i["event"] == "kreleased":
                 k.release(i["info"])
+
+taskrecorder = Recorder()
+taskrecorder.mlistener.start()
+time.sleep(1)
+taskrecorder.klistener.start()
 
 class settings(tk.Toplevel):
     def __init__(self, parent):
@@ -141,26 +156,38 @@ class tasks(tk.Toplevel):
 
         self.play_ico = tk.PhotoImage(file="run-button.png",width=30,height=30)
         self.stop_ico = tk.PhotoImage(file="stop-button.png",width=30,height=30)
-
-        self.recorder = Recorder()
+        self.record_ico = tk.PhotoImage(file="record-button.png",width=30,height=30)
+        self.stop_record_ico = tk.PhotoImage(file="record-button-stop.png",width=30,height=30)
+        self.recorder = taskrecorder
         self.player = None
         self.playing = False
         self.continuous = True
+        self.events=None
+        self.recorded=False
 
-        self.recording = tk.BooleanVar(self,self.recorder.recording)
+        self.recording = tk.BooleanVar(self,taskrecorder.recording)
 
-        self.recordbutton = tk.Button(self,text="Record",command=self.record)
+        self.recordbutton = tk.Button(self,command=self.record,image=self.record_ico)
         self.recordbutton.grid(row=0,column=0)
 
         self.togglebutton = tk.Button(self,command=self.toggle,image=self.play_ico)
         self.togglebutton.grid(row=0,column=1)
+
+
     def load(self):
         self.player = Player()
     
     def toggle(self):
         if not self.playing:
-            self.togglebutton.image = self.stop_ico
+            if self.recorded == True:
+                self.player = Player(taskrecorder.Yield())
+            elif self.recorded == False:
+                if self.Player == None:
+                    self.player = Player()
+        
+            self.togglebutton.config(image = self.stop_ico)
             def run():
+                self.playing = True
                 if self.continuous == True:
                     while self.playing:
                         self.player.Play()
@@ -172,14 +199,28 @@ class tasks(tk.Toplevel):
             self.togglebutton.image = self.play_ico
             self.playing = False
 
+
     def record(self):
-        if not self.recorder.recording:
-            self.recorder.Start()
+        if self.playing:
+            return
+        if not taskrecorder.recording:
+            self.recordbutton.config(image=self.stop_record_ico)
+            taskrecorder.Start()
+            self.recorded=True
+        elif taskrecorder.recording:
+            self.stop_record()
 
     def save(self):
-        if self.recorder.recording:
-            self.recorder.Stop()
-        self.recorder.Save()
+        if taskrecorder.recording:
+            taskrecorder.Stop()
+        taskrecorder.Save()
+        self.events=taskrecorder.Yield()
+    def stop_record(self):
+        taskrecorder.recording=False
+        self.events=taskrecorder.Yield()
+        self.recordbutton.config(image=self.record_ico)
+
+
 class main(tk.Tk):
     def __init__(self):
         super().__init__()
@@ -323,6 +364,9 @@ class main(tk.Tk):
     def quit_app(self):
             self.running = False
             self.listener.stop()
+            taskrecorder.klistener.stop()
+            taskrecorder.mlistener.stop()
+            tasky.destroy()
             self.destroy()
 
     def load_script(self):
@@ -384,7 +428,11 @@ class main(tk.Tk):
         settings(self).grab_set()
 
     def open_tasks(self):
+        
+        tasky = tasks(self)
+        tasky.grab_set()
 
-        tasks(self).grab_set()
+
+
 app = main()
 app.mainloop()
