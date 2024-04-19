@@ -1,3 +1,8 @@
 [tools.py2app.bundle.main]
 
-name = "prism's utilities"
+name = "prism's autoclicker"
+script = "prism's autoclicker.py"
+include = ["pynput"]
+
+build-type = "standalone"
+arch = "arm64
