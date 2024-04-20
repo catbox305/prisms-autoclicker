@@ -3,6 +3,8 @@
 
 # Hello there.
 
+__version__ = "4.0"
+
 import tkinter as tk
 from tkinter import messagebox
 from tkinter import filedialog
@@ -10,7 +12,7 @@ from pynput.mouse import Button, Controller
 from pynput import mouse
 from pynput import keyboard
 import threading
-import time
+from time import time, sleep
 import pickle
 m = mouse.Controller()
 k = keyboard.Controller()
@@ -24,10 +26,10 @@ class SyncedRecorder:
         self.start = 0
         self.rkt = threading.Thread(target=self.recordkeys,name="syncedkeyboardrecorder",daemon=True)
         self.rkt.start()
-        time.sleep(0.1)
+        sleep(0.1)
         self.rmt = threading.Thread(target=self.recordmouse,name="syncedmouserecorder",daemon=True)
         self.rmt.start()
-        time.sleep(0.1)
+        sleep(0.1)
     def recordkeys(self):
         with keyboard.Events() as events:
             for event in events:
@@ -59,7 +61,7 @@ class SyncedRecorder:
             if self.recording:
                 self.events.append(
                         {
-                            "time":round(time.time()-self.start,2),
+                            "time":round(time()-self.start,2),
                             "event":"move",
                             "info":[x,y]
                         }
@@ -70,7 +72,7 @@ class SyncedRecorder:
             if self.recording:
                 self.events.append(
                         {
-                            "time":round(time.time()-self.start,2),
+                            "time":round(time()-self.start,2),
                             "event":"mpressed" if pressed else "mreleased",
                             "info":button
                         }
@@ -81,7 +83,7 @@ class SyncedRecorder:
             if self.recording:
                 self.events.append(
                         {
-                            "time":round(time.time()-self.start,2),
+                            "time":round(time()-self.start,2),
                             "event":"scroll",
                             "info":[dx,dy]
                         }
@@ -104,7 +106,7 @@ class SyncedRecorder:
                 #if not ((keyboard.Key.alt in self.down) and key in [keyboard.KeyCode.from_char("†"),keyboard.KeyCode.from_char("®")]):
                     self.events.append(
                             {
-                                "time":round(time.time()-self.start,2),
+                                "time":round(time()-self.start,2),
                                 "event":"kpressed",
                                 "info":key
                             }
@@ -122,7 +124,7 @@ class SyncedRecorder:
                 if key != keyboard.KeyCode.from_char("®"):
                     self.events.append(
                             {
-                                "time":round(time.time()-self.start,2),
+                                "time":round(time()-self.start,2),
                                 "event":"kreleased",
                                 "info":key
                             }
@@ -130,7 +132,7 @@ class SyncedRecorder:
         except Exception:
             pass
     def Start(self):
-        self.start = time.time()
+        self.start = time()
         self.recording = True
     def Stop(self):
         self.recording = False
@@ -183,42 +185,39 @@ class Recorder:
             if self.recording:
                 self.events.append(
                         {
-                            "time":round(time.time()-self.start,4),
+                            "time":round(time()-self.start,4),
                             "event":"move",
                             "info":[x,y]
                         }
                     )
-        except Exception: pass
+        except: pass
     def on_click(self,x, y, button, pressed):
         try:
             if self.recording:
                 self.events.append(
                         {
-                            "time":round(time.time()-self.start,4),
+                            "time":round(time()-self.start,4),
                             "event":"mpressed" if pressed else "mreleased",
                             "info":button
                         }
                     )
-        except Exception: pass
+        except: pass
     def on_scroll(self,x, y, dx, dy):
         try:
             if self.recording:
                 self.events.append(
                         {
-                            "time":round(time.time()-self.start,4),
+                            "time":round(time()-self.start,4),
                             "event":"scroll",
                             "info":[dx,dy]
                         }
                 )
-        except Exception: pass
+        except: pass
     def on_press(self,key):
         global app
         try:
             self.down.append(key)
-        except:
-            pass
 
-        try:
             if keyboard.Key.alt in self.down and keyboard.KeyCode.from_char("®") in self.down:
                 app.tasky.record()
             elif keyboard.Key.alt in self.down and keyboard.KeyCode.from_char("π") in self.down:
@@ -228,33 +227,29 @@ class Recorder:
             elif self.recording:
                     self.events.append(
                             {
-                                "time":round(time.time()-self.start,4),
+                                "time":round(time()-self.start,8),
                                 "event":"kpressed",
                                 "info":key
                             }
                         )
-        except Exception:
+        except:
             pass
         
     def on_release(self,key):
         try:
             self.down.remove(key)
+            if self.recording and key != keyboard.KeyCode.from_char("®"):
+                self.events.append(
+                        {
+                            "time":round(time()-self.start,8),
+                            "event":"kreleased",
+                            "info":key
+                        }
+                    )
         except:
             pass
-        try:
-            if self.recording:
-                if key != keyboard.KeyCode.from_char("®"):
-                    self.events.append(
-                            {
-                                "time":round(time.time()-self.start,4),
-                                "event":"kreleased",
-                                "info":key
-                            }
-                        )
-        except Exception:
-            pass
     def Start(self):
-        self.start = time.time()
+        self.start = time()
         self.recording = True
     def Stop(self):
         self.recording = False
@@ -273,10 +268,10 @@ class Player:
     def load(self,events):
         self.events=events
     def Play(self):
-        start = time.time()
+        start = time()
         try:
             for i in self.events:
-                while i["time"] > time.time()-start:
+                while i["time"] > time()-start:
                     pass
                 if i["event"] == "move":
                     m.position = (i["info"][0],i["info"][1])
@@ -382,7 +377,6 @@ class tasks(tk.Toplevel):
             self.recordbutton.config(image=self.stop_record_ico)
             taskrecorder.events=[]
             taskrecorder.Start()
-            self.recorded=True
         elif taskrecorder.recording:
             taskrecorder.recording=False
             self.events=taskrecorder.Yield()
@@ -444,9 +438,6 @@ class main(tk.Tk):
         self.lmb_setter = tk.OptionMenu(self, self.mb_var, "LMB","RMB","Key", command=self.configure_mb)
 
         self.lmb_setter.grid(row=2, column=3,sticky="w",padx=(90,0),pady=(0,25))
-
-        self.mouse_controller = Controller()
-        self.keyboard_controller = keyboard.Controller()
         self.running = False
         self.tasky = tasks(self)
         #self.settingsbutton = tk.Button(self,text="...",command=self.open_settings)
@@ -460,7 +451,7 @@ class main(tk.Tk):
                     raise ValueError
                 self.running = True
                 self.toggle_button.configure(fg="green")
-                time.sleep(1)
+                sleep(1)
                 self.start_autoclicker()
             except ValueError:
                 messagebox.showerror("Invalid Interval", "Please enter a click interval greater than zero.")
@@ -479,17 +470,16 @@ class main(tk.Tk):
             while self.running:
                 delay = float(self.click_delay_var.get())
                 if self.mb_var.get() == "LMB":
-                    self.mouse_controller.click(Button.left, 1)
+                    m.click(Button.left, 1)
                 elif self.mb_var.get() == "RMB":
-                    self.mouse_controller.click(Button.right, 1)
+                    m.click(Button.right, 1)
                 elif self.mb_var.get() == "Key":
-                    self.keyboard_controller.press(self.key_var.get())
-                    self.keyboard_controller.release(self.key_var.get())
+                    k.touch(self.key_var.get())
                 elif self.mb_var.get() == "...":
                     self.run_script()
-                time.sleep(delay)
+                sleep(delay)
 
-        self.autoclicker_thread = threading.Thread(target=autoclick)
+        self.autoclicker_thread = threading.Thread(target=autoclick, daemon=True)
         self.autoclicker_thread.start()
 
 
@@ -546,7 +536,7 @@ class main(tk.Tk):
 
         for step in self.loadedscript:
             if step["command"].lower() == "wait":
-                time.sleep(float(step["args"][0]))
+                sleep(float(step["args"][0]))
             elif step["command"].lower() == "click":
                 assert step["args"][0].lower() in ["lmb","rmb"]
                 if step["args"][0].lower() == "lmb": tmp = Button.left
@@ -587,6 +577,4 @@ app = main()
 #hotkeys = keyboard.GlobalHotKeys({"<alt>+π":app.tasky.toggle,"<alt>+®":app.tasky.record,"<alt>+†":app.toggle})
 #hotkeys.start()
 
-try:
-    app.mainloop()
-except Exception: pass
+app.mainloop()

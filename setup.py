@@ -1,6 +1,6 @@
 from setuptools import setup
 
-NAME = "prism's utilities"
+NAME = "prism's autoclicker"
 VERSION = "4.0"
 
 plist = {
@@ -13,12 +13,13 @@ plist = {
 
 setup(
    
-    app=["prism's utilities.py"],
-    setup_requires=["pynput",],
+    app=["prism's autoclicker.py"],
+    setup_requires=["pynput"],
     options={
         "py2app": {
-            "arch": "arm64",
-            "build-type": "standalone"
+            "arch": "x86_64",
+			"includes": ["pickle","threading","time"],
+			"packages": ["pynput"]
         }
-    },
+    }
 )
