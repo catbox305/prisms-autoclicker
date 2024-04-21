@@ -14,7 +14,9 @@ from pynput import keyboard
 import threading
 from time import time, sleep
 import pickle
+global m
 m = mouse.Controller()
+global k
 k = keyboard.Controller()
 global app
 class SyncedRecorder:
@@ -179,18 +181,15 @@ class Recorder:
             on_release=self.on_release,
             name="klistener"
         )
-
     def on_move(self,x, y):
-        try:
-            if self.recording:
-                self.events.append(
-                        {
-                            "time":round(time()-self.start,4),
-                            "event":"move",
-                            "info":[x,y]
-                        }
-                    )
-        except: pass
+        if self.recording:
+            self.events.append(
+                    {
+                        "time":round(time()-self.start,4),
+                        "event":"move",
+                        "info":[x,y]
+                    }
+                )
     def on_click(self,x, y, button, pressed):
         try:
             if self.recording:
@@ -259,36 +258,42 @@ class Recorder:
     def Yield(self):
         return self.events
 class Player:
-    def __init__(self,events=[]):
-        self.events = events
+    def __init__(self):
+        self.events = []
+        self.compiled = []
         self.playing = False
+        self.iscompiled = False
     def load_from_file(self):
         with filedialog.askopenfile(mode="rb") as f:
             self.events = pickle.load(f)
     def load(self,events):
         self.events=events
     def Play(self):
-        start = time()
-        try:
+        if self.iscompiled:
+            for i in self.compiled:
+                if not self.playing:
+                    break
+                i[0](i[1])
+        else:
+            start = time()
             for i in self.events:
+                if not self.playing:
+                    break
                 while i["time"] > time()-start:
                     pass
                 if i["event"] == "move":
                     m.position = (i["info"][0],i["info"][1])
                 elif i["event"] == "mpressed":
-                    m.press(button=i["info"])
+                    m.press(i["info"])
                 elif i["event"] == "mreleased":
-                    m.release(button=i["info"])
+                    m.release(i["info"])
                 elif i["event"] == "scroll":
                     m.scroll(i["info"][0],i["info"][1])
                 elif i["event"] == "kpressed":
                     k.press(i["info"])
                 elif i["event"] == "kreleased":
                     k.release(i["info"])
-                if not self.playing:
-                    break
-        except Exception:
-            pass
+            return
 
 taskrecorder = Recorder()
 
@@ -343,15 +348,19 @@ class tasks(tk.Toplevel):
         try:
             self.player.load_from_file()
             self.events = self.player.events
+            self.player.iscompiled = False
+            self.compile()
+            
         except TypeError:
             pass
     def toggle(self):
         if not self.playing:
         
             self.togglebutton.config(image = self.stop_ico)
-            def run():
+            def run(): 
                 self.playing = True
                 self.player.playing = True
+                
                 if self.continuous == True:
                     while self.playing:
                         try:
@@ -363,11 +372,46 @@ class tasks(tk.Toplevel):
                     except Exception: pass
             self.pt = threading.Thread(target=run,daemon=True)
             self.pt.start()
+
         else:
             self.togglebutton.config(image = self.play_ico)
             self.playing = False
             self.player.playing = False
+    def _compile(self):
 
+        res = []
+
+        start = time()
+        print("[Prism's Autoclicker] Compiling events...")
+        for i in self.events:
+            tmp = time()
+            while i["time"] > time()-start:
+                pass
+            res.append([sleep,time()-tmp])
+            if i["event"] == "move":
+                def temp(r):
+                    global m
+                    m.position = r
+                res.append([temp, (i["info"][0],i["info"][1])])
+            elif i["event"] == "mpressed":
+                res.append([m.press,i["info"]])
+            elif i["event"] == "mreleased":
+                res.append([m.release,i["info"]])
+            elif i["event"] == "scroll":
+                def temp(r):
+                    global m
+                    m.scroll(r[0],r[1])
+                res.append([temp, [i["info"][0], i["info"][1]]])
+            elif i["event"] == "kpressed":
+                res.append([k.press, i["info"]])
+            elif i["event"] == "kreleased":
+                res.append([k.release, i["info"]])
+        self.player.compiled = res
+        self.player.iscompiled = True
+    def compile(self):
+        tmp = threading.Thread(target=self._compile, daemon=True)
+        tmp.start()
+          
 
     def record(self):
         if self.playing:
@@ -382,11 +426,19 @@ class tasks(tk.Toplevel):
             self.events=taskrecorder.Yield()
             self.recordbutton.config(image=self.record_ico)
             self.player.load(self.events)
+            self.player.iscompiled = False
+            self.compile()
     def save(self):
+        tmp = False
         if taskrecorder.recording:
             taskrecorder.Stop()
+            tmp = True
         taskrecorder.Save()
-        self.events=taskrecorder.Yield()
+        if tmp:
+            self.events=taskrecorder.Yield()
+            self.player.events = self.events
+            self.player.iscompiled = False
+            self.compile()
 class main(tk.Tk):
     def __init__(self):
         super().__init__()
@@ -401,9 +453,6 @@ class main(tk.Tk):
         self.optionsmenu = tk.Menu(self.menu)
         self.menu.add_cascade(label="File",menu=self.filemenu)
         self.filemenu.add_command(label="Load Script",command=self.load_script)
-        #self.menu.add_separator()
-        #self.menu.add_cascade(label="Options",menu=self.optionsmenu)
-        #self.optionsmenu.add_command(label="Open Settings",command=self.open_settings)
 
         self.click_delay_label = tk.Label(self, text="Interval (s):")
         self.click_delay_label.grid(row=1, column=1, sticky="w", padx=(20, 0), pady=(30, 20))
@@ -573,8 +622,5 @@ class main(tk.Tk):
         self.tasky.wm_deiconify()
 
 app = main()
-
-#hotkeys = keyboard.GlobalHotKeys({"<alt>+π":app.tasky.toggle,"<alt>+®":app.tasky.record,"<alt>+†":app.toggle})
-#hotkeys.start()
 
 app.mainloop()
