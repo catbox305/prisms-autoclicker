@@ -11,7 +11,7 @@ Finally, go to settings, select "Privacy/Security", and give the app "Input Moni
 
 ## Installation (Windows)
 
-Download `prism's autoclicker.py` and rename it to `prisms autoclicker.py`.
+Download `prism's autoclicker.py` and rename it to `prisms autoclicker.py`. **since I am constantly updating it, I will leave a copy in the assets starting at v4.01**
 
 > If you do not already have python installed/you have python 3.10 or under (check it with `py --version`) download it here: [https://python.org/downloads](https://www.python.org/downloads/)\
 > Presumably, your installation of python will come with pip. You can check if pip is already installed with the command: `py -m pip --version`\
