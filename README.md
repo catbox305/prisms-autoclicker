@@ -30,4 +30,4 @@ Hotkeys:
 <option>+<p> Toggle tasks playback
 ```
 
-
+#### If you found prism's autoclicker useful, please consider starring the repository =)
