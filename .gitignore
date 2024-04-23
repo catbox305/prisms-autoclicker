@@ -5,3 +5,4 @@ dist/*
 *.pickle
 icons/*
 gsl/*
+prisms autoclicker.spec
