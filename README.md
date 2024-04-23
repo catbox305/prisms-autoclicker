@@ -1,4 +1,4 @@
-## Installation
+## Installation (only mac is supported)
 
 Download the .zip from the assets section of the latest release.
 > Make sure to download the .zip that matches your CPU architecture.
