@@ -274,7 +274,6 @@ class Player:
                 if not self.playing:
                     return
                 i[0](i[1])
-                print(i)
         else:
             start = time()
             for i in self.events:
