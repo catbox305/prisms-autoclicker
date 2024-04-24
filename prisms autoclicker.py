@@ -272,8 +272,9 @@ class Player:
         if self.iscompiled:
             for i in self.compiled:
                 if not self.playing:
-                    break
+                    return
                 i[0](i[1])
+                print(i)
         else:
             start = time()
             for i in self.events:
@@ -393,19 +394,25 @@ class tasks(tk.Toplevel):
                     global m
                     m.position = r
                 res.append([temp, (i["info"][0],i["info"][1])])
+                continue
             elif i["event"] == "mpressed":
                 res.append([m.press,i["info"]])
+                continue
             elif i["event"] == "mreleased":
                 res.append([m.release,i["info"]])
+                continue
             elif i["event"] == "scroll":
                 def temp(r):
                     global m
                     m.scroll(r[0],r[1])
                 res.append([temp, [i["info"][0], i["info"][1]]])
+                continue
             elif i["event"] == "kpressed":
                 res.append([k.press, i["info"]])
+                continue
             elif i["event"] == "kreleased":
                 res.append([k.release, i["info"]])
+                continue
         self.player.compiled = res
         self.player.iscompiled = True
     def compile(self):
