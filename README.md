@@ -17,17 +17,18 @@ Download `prisms autoclicker.py`. **since I am constantly updating it, I will le
 > Presumably, your installation of python will come with pip. You can check if pip is already installed with the command: `py -m pip --version`\
 > "Download" pip with this command: `py -m ensurepip --default-pip`. If that does not work, please consult this page: [https://packaging.python.org](https://packaging.python.org/en/latest/tutorials/installing-packages/#requirements-for-installing-packages)
 
+Run the command: `py -m pip install pynput`\
 Run the command: `py -m pip install pyinstaller`\
 Once pyinstaller is ready, run: `pyinstaller [path to prisms autoclicker.py goes here]`
-You should now have a working exe! (please send me the file so i can simplify this process)
+You should now have a working exe! (please send me the file so i can simplify this process. also the exe should be located in a "dist" folder in the same place as prisms autoclicker.py)
 
 ## Usage
 
 Hotkeys:
 ```
-<option>+<t> Toggle autoclicker
-<option>+<r> Toggle tasks recording
-<option>+<p> Toggle tasks playback
+<alt>+<t> Toggle autoclicker
+<alt>+<r> Toggle tasks recording
+<alt>+<p> Toggle tasks playback
 ```
 
 #### If you found prism's autoclicker useful, please consider starring the repository =)
