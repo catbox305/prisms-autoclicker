@@ -1,9 +1,9 @@
-# Version 4.0
+# Version 4.1
 # Previously "lion's autoclicker"
 
 # Hello there.
 
-__version__ = "4.0"
+__version__ = "4.1"
 
 import tkinter as tk
 from tkinter import messagebox
@@ -14,6 +14,8 @@ from pynput import keyboard
 import threading
 from time import time, sleep
 import pickle
+from os import nice
+nice(20)
 global m
 m = mouse.Controller()
 global k
@@ -185,7 +187,7 @@ class Recorder:
         if self.recording:
             self.events.append(
                     {
-                        "time":round(time()-self.start,4),
+                        "time":time()-self.start,
                         "event":"move",
                         "info":[x,y]
                     }
@@ -195,7 +197,7 @@ class Recorder:
             if self.recording:
                 self.events.append(
                         {
-                            "time":round(time()-self.start,4),
+                            "time":time()-self.start,
                             "event":"mpressed" if pressed else "mreleased",
                             "info":button
                         }
@@ -206,41 +208,46 @@ class Recorder:
             if self.recording:
                 self.events.append(
                         {
-                            "time":round(time()-self.start,4),
+                            "time":time()-self.start,
                             "event":"scroll",
                             "info":[dx,dy]
                         }
                 )
         except: pass
     def on_press(self,key):
-        global app
         try:
             self.down.append(key)
 
-            if keyboard.Key.alt in self.down and keyboard.KeyCode.from_char("®") in self.down:
-                app.tasky.record()
-            elif keyboard.Key.alt in self.down and keyboard.KeyCode.from_char("π") in self.down:
-                app.tasky.toggle()
-            elif keyboard.Key.alt in self.down and keyboard.KeyCode.from_char("†") in self.down:
-                app.toggle()
-            elif self.recording:
-                    self.events.append(
-                            {
-                                "time":round(time()-self.start,8),
-                                "event":"kpressed",
-                                "info":key
-                            }
-                        )
+            if keyboard.Key.alt in self.down:
+                global app
+                if keyboard.KeyCode.from_char("®") in self.down:
+                    app.tasky.record()
+                    return
+                elif keyboard.KeyCode.from_char("π") in self.down:
+                    app.tasky.toggle()
+                    return
+                elif keyboard.KeyCode.from_char("†") in self.down:
+                    app.toggle()
+                    return
+
+            if self.recording:
+                self.events.append(
+                        {
+                            "time":time()-self.start,
+                            "event":"kpressed",
+                            "info":key
+                        }
+                )
         except:
             pass
-        
+ 
     def on_release(self,key):
         try:
             self.down.remove(key)
             if self.recording and key != keyboard.KeyCode.from_char("®"):
                 self.events.append(
                         {
-                            "time":round(time()-self.start,8),
+                            "time":time()-self.start,
                             "event":"kreleased",
                             "info":key
                         }
@@ -269,31 +276,10 @@ class Player:
     def load(self,events):
         self.events=events
     def Play(self):
-        if self.iscompiled:
-            for i in self.compiled:
-                if not self.playing:
-                    return
-                i[0](i[1])
-        else:
-            start = time()
-            for i in self.events:
-                if not self.playing:
-                    break
-                while i["time"] > time()-start:
-                    pass
-                if i["event"] == "move":
-                    m.position = (i["info"][0],i["info"][1])
-                elif i["event"] == "mpressed":
-                    m.press(i["info"])
-                elif i["event"] == "mreleased":
-                    m.release(i["info"])
-                elif i["event"] == "scroll":
-                    m.scroll(i["info"][0],i["info"][1])
-                elif i["event"] == "kpressed":
-                    k.press(i["info"])
-                elif i["event"] == "kreleased":
-                    k.release(i["info"])
-            return
+        for i in self.compiled:
+            if not self.playing:
+                return
+            i[0](i[1])
 
 taskrecorder = Recorder()
 
@@ -360,7 +346,6 @@ class tasks(tk.Toplevel):
             def run(): 
                 self.playing = True
                 self.player.playing = True
-                
                 if self.continuous == True:
                     while self.playing:
                         try:
@@ -383,11 +368,10 @@ class tasks(tk.Toplevel):
 
         start = time()
         print("[Prism's Autoclicker] Compiling events...")
+        index = -1
         for i in self.events:
-            tmp = time()
-            while i["time"] > time()-start:
-                pass
-            res.append([sleep,time()-tmp])
+            index += 1
+            res.append([sleep,i["time"]-(self.events[index-1]["time"] if index > 0 else 0)])
             if i["event"] == "move":
                 def temp(r):
                     global m
@@ -408,17 +392,15 @@ class tasks(tk.Toplevel):
                 continue
             elif i["event"] == "kpressed":
                 res.append([k.press, i["info"]])
-                continue
             elif i["event"] == "kreleased":
                 res.append([k.release, i["info"]])
                 continue
         self.player.compiled = res
         self.player.iscompiled = True
+        print("[Prism's Autoclicker] Event compiling completed!")
     def compile(self):
         tmp = threading.Thread(target=self._compile, daemon=True)
         tmp.start()
-          
-
     def record(self):
         if self.playing:
             return
@@ -506,7 +488,6 @@ class main(tk.Tk):
                     raise ValueError
                 self.running = True
                 self.toggle_button.configure(fg="green")
-                sleep(1)
                 self.start_autoclicker()
             except ValueError:
                 messagebox.showerror("Invalid Interval", "Please enter a click interval greater than zero.")
@@ -522,21 +503,21 @@ class main(tk.Tk):
             return
 
         def autoclick():
+            if self.mb_var.get() == "LMB":
+                tmp = [m.click,Button.left]
+            elif self.mb_var.get() == "RMB":
+                tmp = [m.click,Button.right]
+            elif self.mb_var.get() == "Key":
+                tmp = [k.touch,self.key_var.get()]
+            elif self.mb_var.get() == "...":
+                tmp = [self.run_script,None]
+            delay = float(self.click_delay_var.get())
             while self.running:
-                delay = float(self.click_delay_var.get())
-                if self.mb_var.get() == "LMB":
-                    m.click(Button.left, 1)
-                elif self.mb_var.get() == "RMB":
-                    m.click(Button.right, 1)
-                elif self.mb_var.get() == "Key":
-                    k.touch(self.key_var.get())
-                elif self.mb_var.get() == "...":
-                    self.run_script()
+                tmp[0](tmp[1])
                 sleep(delay)
 
         self.autoclicker_thread = threading.Thread(target=autoclick, daemon=True)
         self.autoclicker_thread.start()
-
 
     def update_cps(self, *args):
             try:
@@ -587,7 +568,7 @@ class main(tk.Tk):
         self.mb_var.set("...")
         self.key_entry.grid_remove()
         
-    def run_script(self):
+    def run_script(self, arg=None):
 
         for step in self.loadedscript:
             if step["command"].lower() == "wait":
