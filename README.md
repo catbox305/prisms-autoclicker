@@ -30,6 +30,6 @@ Hotkeys:
 <alt>+<r> Toggle tasks recording
 <alt>+<p> Toggle tasks playback
 ```
-Tasks and/or other functionality may be laggy when using Roblox. Exiting fullscreen should fix this.
+For Mac users: Tasks and/or other functionality may be extremely laggy when game mode is enabled. Exiting fullscreen or turning game mode off should fix this.
 
 #### If you found prism's autoclicker useful, please consider starring the repository =)

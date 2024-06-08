@@ -14,158 +14,16 @@ from pynput import keyboard
 import threading
 from time import time, sleep
 import pickle
+from sys import platform
 from os import nice
 nice(20)
+
 global m
 m = mouse.Controller()
 global k
 k = keyboard.Controller()
 global app
-class SyncedRecorder:
-    def __init__(self):
-        self.events = []
-        self.down = []
-        self.recording = False
-        self.stop = False
-        self.start = 0
-        self.rkt = threading.Thread(target=self.recordkeys,name="syncedkeyboardrecorder",daemon=True)
-        self.rkt.start()
-        sleep(0.1)
-        self.rmt = threading.Thread(target=self.recordmouse,name="syncedmouserecorder",daemon=True)
-        self.rmt.start()
-        sleep(0.1)
-    def recordkeys(self):
-        with keyboard.Events() as events:
-            for event in events:
-                if type(event) == keyboard.Events.Press:
-                    try:
-                        self.on_press(event.key)
-                    except KeyError as e:
-                        pass
-                elif type(event) == keyboard.Events.Release:
-                    try:
-                        self.on_release(event.key)
-                    except KeyError as e:
-                        pass
-    def recordmouse(self):
-        with mouse.Events() as events:
-            for event in events:
-                if self.recording:
-                    if type(event) == mouse.Events.Click:
-                        self.on_click(event.x,event.y,event.button,event.pressed)
-                    elif type(event) == mouse.Events.Move:
-                        self.on_move(event.x,event.y)
-                    elif type(event) == mouse.Events.Scroll:
-                        self.on_scroll(event.x,event.y,event.dx,event.dy)
-                if self.stop:
-                    break
-            return
-    def on_move(self,x, y):
-        try:
-            if self.recording:
-                self.events.append(
-                        {
-                            "time":round(time()-self.start,2),
-                            "event":"move",
-                            "info":[x,y]
-                        }
-                    )
-        except Exception: print("!on_move")
-    def on_click(self,x, y, button, pressed):
-        try:
-            if self.recording:
-                self.events.append(
-                        {
-                            "time":round(time()-self.start,2),
-                            "event":"mpressed" if pressed else "mreleased",
-                            "info":button
-                        }
-                    )
-        except Exception: print("!on_click")
-    def on_scroll(self,x, y, dx, dy):
-        try:
-            if self.recording:
-                self.events.append(
-                        {
-                            "time":round(time()-self.start,2),
-                            "event":"scroll",
-                            "info":[dx,dy]
-                        }
-                )
-        except Exception: print("!on_scroll")
-    def on_press(self,key):
-        global app
-        try:
-            self.down.append(key)
-        except:
-            pass
-        try:
-            if keyboard.Key.alt in self.down and keyboard.KeyCode.from_char("®") in self.down:
-                app.tasky.record()
-            elif keyboard.Key.alt in self.down and keyboard.KeyCode.from_char("π") in self.down:
-                app.tasky.toggle()
-            elif keyboard.Key.alt in self.down and keyboard.KeyCode.from_char("†") in self.down:
-                app.toggle()
-            elif self.recording:
-                #if not ((keyboard.Key.alt in self.down) and key in [keyboard.KeyCode.from_char("†"),keyboard.KeyCode.from_char("®")]):
-                    self.events.append(
-                            {
-                                "time":round(time()-self.start,2),
-                                "event":"kpressed",
-                                "info":key
-                            }
-                        )
-        except Exception:
-            pass
-    def on_release(self,key):
-        try:
-            self.down.remove(key)
-        except Exception as e:
-            pass
-        try:
-            if self.recording:
-                #if not ((keyboard.Key.alt in self.down) and key in [keyboard.KeyCode.from_char("†"),keyboard.KeyCode.from_char("®")]):
-                if key != keyboard.KeyCode.from_char("®"):
-                    self.events.append(
-                            {
-                                "time":round(time()-self.start,2),
-                                "event":"kreleased",
-                                "info":key
-                            }
-                        )
-        except Exception:
-            pass
-    def Start(self):
-        self.start = time()
-        self.recording = True
-    def Stop(self):
-        self.recording = False
-    def Save(self):
-        with filedialog.asksaveasfile(mode="wb",defaultextension="txt") as f:
-            pickle.dump(self.events, f, pickle.HIGHEST_PROTOCOL)
-    def Yield(self):
-        return self.events
 
-class WIPEventBasedRecorder:
-    def __init__(self):
-        raise NotImplemented
-        self._events = []
-        self.isrecording = False
-        self.starttime = int
-    def _record(self):
-
-        for event in keyboard.Events():
-            if not self.isrecording:
-                break
-            else:
-                self.events.append({
-                    "time":self.time-self.starttime,
-                    "event":event
-                })
-        
-        return
-    def _format(self):
-        pass
 class Recorder:
     def __init__(self):
         self.events = []
@@ -310,7 +168,6 @@ class tasks(tk.Toplevel):
         self.save_ico = tk.PhotoImage(data="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",width=40,height=40)
         self.load_ico = tk.PhotoImage(data="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",width=40,height=40)
         self.player = Player()
-        self.synced = True
         self.playing = False
         self.continuous = True
         self.events=None
