@@ -15,16 +15,13 @@ import threading
 from time import time, sleep
 import pickle
 import sys
+import psutil, os
+process = psutil.Process(os.getpid())
 
 if sys.platform == "win32":
-    import win32api, win32process, win32con
-
-    pid = win32api.GetCurrentProcessId()
-    handle = win32api.OpenProcess(win32con.PROCESS_ALL_ACCESS, True, pid)
-    win32process.SetPriorityClass(handle, win32process.REALTIME_PRIORITY_CLASS)
+    process.nice(psutil.REALTIME_PRIORITY_CLASS)
 else:
-    import os
-    os.nice(20)
+    process.nice(20)
 
 global m
 m = mouse.Controller()
