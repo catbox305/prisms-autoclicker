@@ -14,9 +14,17 @@ from pynput import keyboard
 import threading
 from time import time, sleep
 import pickle
-from sys import platform
-from os import nice
-nice(20)
+import sys
+
+if sys.platform == "win32":
+    import win32api, win32process, win32con
+
+    pid = win32api.GetCurrentProcessId()
+    handle = win32api.OpenProcess(win32con.PROCESS_ALL_ACCESS, True, pid)
+    win32process.SetPriorityClass(handle, win32process.REALTIME_PRIORITY_CLASS)
+else:
+    import os
+    os.nice(20)
 
 global m
 m = mouse.Controller()
@@ -365,7 +373,10 @@ class main(tk.Tk):
             elif self.mb_var.get() == "RMB":
                 tmp = [m.click,Button.right]
             elif self.mb_var.get() == "Key":
-                tmp = [k.touch,self.key_var.get()]
+                def tmp1(a):
+                    k.press(self.key_var.get())
+                    k.release(self.key_var.get())
+                tmp=[tmp1,"a"]
             elif self.mb_var.get() == "...":
                 tmp = [self.run_script,None]
             delay = float(self.click_delay_var.get())
