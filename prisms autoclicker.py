@@ -368,20 +368,17 @@ class main(tk.Tk):
             return
 
         def autoclick():
-            if self.mb_var.get() == "LMB":
-                tmp = [m.click,Button.left]
-            elif self.mb_var.get() == "RMB":
-                tmp = [m.click,Button.right]
-            elif self.mb_var.get() == "Key":
-                def tmp1(a):
+            while self.running:
+                if self.mb_var.get() == "LMB":
+                    m.click(Button.left)
+                elif self.mb_var.get() == "RMB":
+                    m.click(Button.right)
+                elif self.mb_var.get() == "Key":
                     k.press(self.key_var.get())
                     k.release(self.key_var.get())
-                tmp=[tmp1,"a"]
-            elif self.mb_var.get() == "...":
-                tmp = [self.run_script,None]
-            delay = float(self.click_delay_var.get())
-            while self.running:
-                tmp[0](tmp[1])
+                elif self.mb_var.get() == "...":
+                    self.run_script()
+                delay = float(self.click_delay_var.get())
                 sleep(delay)
 
         self.autoclicker_thread = threading.Thread(target=autoclick, daemon=True)
