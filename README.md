@@ -19,6 +19,8 @@ Download `prisms autoclicker.py` from the assets section of the latest release.
 
 Run the command: `py -m pip install pynput`\
 Run the command: `py -m pip install pyinstaller`\
+Run the command: `py -m pip install psutil`\
+
 Once pyinstaller is ready, run: `pyinstaller [path to prisms autoclicker.py goes here]`
 You should now have a working exe! (please send me the file so i can simplify this process. also the exe should be located in a "dist" folder in the same place as prisms autoclicker.py)
 
