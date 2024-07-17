@@ -35,6 +35,10 @@ class Recorder:
         self.down = []
         self.start = 0
         self.recording = False
+        if sys.platform == "win32":
+            self.hk = ["r","p","t"]
+        else:
+            self.hk = ["®","π","†"]
         self.mlistener = mouse.Listener(
             on_move=self.on_move,
             on_click=self.on_click,
@@ -83,13 +87,13 @@ class Recorder:
 
             if keyboard.Key.alt in self.down:
                 global app
-                if keyboard.KeyCode.from_char("®") in self.down:
+                if keyboard.KeyCode.from_char(self.hk[0]) in self.down:
                     app.tasky.record()
                     return
-                elif keyboard.KeyCode.from_char("π") in self.down:
+                elif keyboard.KeyCode.from_char(self.hk[1]) in self.down:
                     app.tasky.toggle()
                     return
-                elif keyboard.KeyCode.from_char("†") in self.down:
+                elif keyboard.KeyCode.from_char(self.hk[2]) in self.down:
                     app.toggle()
                     return
 
