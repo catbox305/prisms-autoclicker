@@ -111,7 +111,7 @@ class Recorder:
     def on_release(self,key):
         try:
             self.down.remove(key)
-            if self.recording and key != keyboard.KeyCode.from_char("®"):
+            if self.recording and key != keyboard.KeyCode.from_char(self.hk[0]):
                 self.events.append(
                         {
                             "time":time()-self.start,
