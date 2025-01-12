@@ -1,3 +1,5 @@
+If these instructions are unclear or do not work, please let me know.
+
 ## Installation (Mac)
 
 Download the .zip from the assets section of the latest release.
